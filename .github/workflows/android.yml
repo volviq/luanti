@@ -45,15 +45,6 @@ jobs:
       with:
           distribution: 'temurin'
           java-version: '17'
-    - name: Use test signing key
-      # Test builds only: a fixed throwaway key so updates install over each other.
-      run: |
-        cat > android/local.properties <<EOP
-        keystore=$GITHUB_WORKSPACE/android/gamepad-test.jks
-        keystore.password=testtest
-        key=test
-        key.password=testtest
-        EOP
     - name: Build AAB with Gradle
       # We build an AAB as well for uploading to the the Play Store.
       run: cd android; ./gradlew bundlerelease
@@ -69,12 +60,12 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: Luanti-armeabi-v7a.apk
-        path: android/app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+        path: android/app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk
     - name: Save arm64 artifact
       uses: actions/upload-artifact@v7
       with:
         name: Luanti-arm64-v8a.apk
-        path: android/app/build/outputs/apk/release/app-arm64-v8a-release.apk
+        path: android/app/build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk
     - name: Save x86 artifact
       uses: actions/upload-artifact@v7
       with:
@@ -89,9 +80,15 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
+        # Sign like F-Droid does: an unminified release build signed afterwards
         out=android/app/build/outputs/apk/release
-        cp $out/app-armeabi-v7a-release.apk luanti-gamepad-test-armeabi-v7a.apk
-        cp $out/app-arm64-v8a-release.apk luanti-gamepad-test-arm64-v8a.apk
+        bt=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -n1)
+        for abi in armeabi-v7a arm64-v8a; do
+          $bt/zipalign -f -p 4 $out/app-$abi-release-unsigned.apk aligned-$abi.apk
+          $bt/apksigner sign --ks android/gamepad-test.jks --ks-key-alias test \
+            --ks-pass pass:testtest --key-pass pass:testtest \
+            --out luanti-gamepad-test-$abi.apk aligned-$abi.apk
+        done
         gh release view gamepad-test >/dev/null 2>&1 || gh release create gamepad-test \
           --prerelease --target "$GITHUB_SHA" --title "Gamepad menu cursor (test build)" \
           --notes "Test build of the gamepad menu cursor. Installs next to the normal Luanti app."
