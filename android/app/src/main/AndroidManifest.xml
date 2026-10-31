@@ -10,7 +10,7 @@
 	<application
 		android:allowBackup="false"
 		android:icon="@mipmap/ic_launcher"
-		android:label="@string/label"
+		android:label="Luanti Gamepad-Test"
 		android:resizeableActivity="false"
 		android:appCategory="game"
 		android:enableOnBackInvokedCallback="false"
@@ -55,7 +55,7 @@
 		<!-- FIXME: we can probably drop this and use the documents provider to share files -->
 		<provider
 			android:name="androidx.core.content.FileProvider"
-			android:authorities="net.minetest.minetest.fileprovider"
+			android:authorities="${applicationId}.fileprovider"
 			android:grantUriPermissions="true"
 			android:exported="false">
 			<meta-data
@@ -65,7 +65,7 @@
 
 		<provider
             android:name=".LuantiDocumentsProvider"
-            android:authorities="net.minetest.minetest.documents"
+            android:authorities="${applicationId}.documents"
             android:exported="true"
             android:grantUriPermissions="true"
             android:permission="android.permission.MANAGE_DOCUMENTS">
