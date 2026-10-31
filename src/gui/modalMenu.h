@@ -47,6 +47,10 @@ public:
 	void draw();
 	void quitMenu();
 
+	// Moves the gamepad-driven menu cursor. Called once per frame, outside of
+	// drawing and event processing.
+	static void stepGamepadCursor();
+
 	virtual void regenerateGui(v2u32 screensize) = 0;
 	virtual void drawMenu() = 0;
 	virtual bool preprocessEvent(const SEvent &event);
@@ -110,4 +114,13 @@ private:
 
 	// Used to detect double-taps and convert them into double-click events.
 	PointerAction m_last_touch{};
+
+	// Gamepad cursor: lets a gamepad drive a virtual mouse pointer in menus.
+	bool handleGamepadEvent(const SEvent &event);
+	void updateGamepadCursor();
+	void postGamepadMouseEvent(EMOUSE_INPUT_EVENT type, f32 wheel = 0.0f);
+	void postGamepadEscape();
+	void drawGamepadCursor();
+	// Whether this menu has told the GUI about the gamepad cursor position yet.
+	bool m_gamepad_cursor_synced = false;
 };

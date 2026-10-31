@@ -25,6 +25,7 @@
 #include "filesys.h"
 #include "irrlicht_changes/static_text.h"
 #include "irr_ptr.h"
+#include "gui/modalMenu.h"
 
 RenderingEngine *RenderingEngine::s_singleton = nullptr;
 
@@ -156,6 +157,15 @@ static IrrlichtDevice *createDevice(SIrrlichtCreationParameters params, std::opt
 }
 
 /* RenderingEngine class */
+
+bool RenderingEngine::run()
+{
+	bool ret = m_device->run();
+	// Done here so that it happens once per frame, both in the main menu and
+	// in-game, outside of drawing and event processing.
+	GUIModalMenu::stepGamepadCursor();
+	return ret;
+}
 
 RenderingEngine::RenderingEngine(MyEventReceiver *receiver)
 {

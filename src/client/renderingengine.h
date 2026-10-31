@@ -134,10 +134,7 @@ public:
 	void initialize(Client *client, Hud *hud);
 	void finalize();
 
-	bool run()
-	{
-		return m_device->run();
-	}
+	bool run();
 
 	// FIXME: this is still global when it shouldn't be
 	static ShadowRenderer *get_shadow_renderer()
