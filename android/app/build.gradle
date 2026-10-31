@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
 	ndkVersion "$ndk_version"
 	defaultConfig {
-		applicationId 'net.minetest.minetest'
+		applicationId 'net.minetest.minetest.gamepadtest'
 		minSdkVersion 21
 		compileSdk = 36
 		targetSdkVersion 36
