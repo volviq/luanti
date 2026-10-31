@@ -40,7 +40,6 @@ struct GamepadCursorState {
 
 GamepadCursorState g_gamepad_cursor;
 
-constexpr f32 GAMEPAD_STICK_DEADZONE = 0.2f;
 // Cursor speed at full stick deflection, in screen heights per second
 constexpr f32 GAMEPAD_CURSOR_SPEED = 1.0f;
 // Scroll speed at full stick deflection, in wheel steps per second
@@ -48,11 +47,14 @@ constexpr f32 GAMEPAD_SCROLL_SPEED = 12.0f;
 
 f32 gamepadAxisValue(GamepadAxis axis)
 {
+	// Same dead zones as for in-game gamepad input
+	f32 inner = g_settings->getFloat("joystick_inner_deadzone", 0.0f, 0.95f);
+	f32 outer = g_settings->getFloat("joystick_outer_deadzone", 0.0f, 0.95f - inner);
 	f32 v = g_gamepad_cursor.axis[(size_t)axis];
 	f32 a = std::fabs(v);
-	if (a < GAMEPAD_STICK_DEADZONE)
+	if (a <= inner)
 		return 0.0f;
-	f32 n = std::min((a - GAMEPAD_STICK_DEADZONE) / (1.0f - GAMEPAD_STICK_DEADZONE), 1.0f);
+	f32 n = std::min((a - inner) / (1.0f - outer - inner), 1.0f);
 	// Quadratic response curve: precise at small deflection, fast at full
 	return std::copysign(n * n, v);
 }
