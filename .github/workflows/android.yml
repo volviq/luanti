@@ -90,9 +90,9 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         out=android/app/build/outputs/apk/release
-        cp $out/app-armeabi-v7a-release.apk luanti-gamepad-test-armeabi-v7a.apk
-        cp $out/app-arm64-v8a-release.apk luanti-gamepad-test-arm64-v8a.apk
-        gh release view gamepad-test >/dev/null 2>&1 || gh release create gamepad-test \
-          --prerelease --target "$GITHUB_SHA" --title "Gamepad menu cursor (test build)" \
-          --notes "Test build of the gamepad menu cursor. Installs next to the normal Luanti app."
-        gh release upload gamepad-test luanti-gamepad-test-armeabi-v7a.apk luanti-gamepad-test-arm64-v8a.apk --clobber
+        cp $out/app-armeabi-v7a-release.apk luanti-packaging-test-armeabi-v7a.apk
+        cp $out/app-arm64-v8a-release.apk luanti-packaging-test-arm64-v8a.apk
+        gh release view packaging-test >/dev/null 2>&1 || gh release create packaging-test \
+          --prerelease --target "$GITHUB_SHA" --title "Packaging test (unmodified master)" \
+          --notes "Control build: unmodified master with test packaging."
+        gh release upload packaging-test luanti-packaging-test-armeabi-v7a.apk luanti-packaging-test-arm64-v8a.apk --clobber
