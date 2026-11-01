@@ -35,6 +35,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -129,29 +130,49 @@ public class GameActivity extends SDLActivity {
 			editText.setInputType(InputType.TYPE_CLASS_TEXT);
 		editText.setSelection(Objects.requireNonNull(editText.getText()).length());
 		final InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+		final boolean[] submitted = {false};
+		final Runnable submit = () -> {
+			if (submitted[0])
+				return;
+			submitted[0] = true;
+			imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+			inputDialogState = DialogState.DIALOG_INPUTTED;
+			messageReturnValue = editText.getText().toString();
+			alertDialog.dismiss();
+		};
 		editText.setOnKeyListener((view, keyCode, event) -> {
 			// For multi-line, do not submit the text after pressing Enter key
 			if (keyCode == KeyEvent.KEYCODE_ENTER && editType != 1) {
-				imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-				inputDialogState = DialogState.DIALOG_INPUTTED;
-				messageReturnValue = editText.getText().toString();
-				alertDialog.dismiss();
+				submit.run();
 				return true;
 			}
 			return false;
 		});
-		// For multi-line, add Done button since Enter key does not submit text
-		if (editType == 1) {
-			Button doneButton = new Button(this);
-			container.addView(doneButton);
-			doneButton.setText(R.string.ime_dialog_done);
-			doneButton.setOnClickListener((view -> {
-				imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-				inputDialogState = DialogState.DIALOG_INPUTTED;
-				messageReturnValue = editText.getText().toString();
-				alertDialog.dismiss();
-			}));
+		if (editType != 1) {
+			// Soft keyboards (e.g. on Fire TV / Android TV and many phone
+			// keyboards) report their Enter/Done key as an editor action
+			// instead of a key event.
+			editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+			editText.setOnEditorActionListener((view, actionId, event) -> {
+				if (actionId == EditorInfo.IME_ACTION_DONE ||
+						actionId == EditorInfo.IME_ACTION_GO ||
+						actionId == EditorInfo.IME_ACTION_SEND ||
+						actionId == EditorInfo.IME_ACTION_NEXT ||
+						(actionId == EditorInfo.IME_NULL && event != null &&
+							event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+					submit.run();
+					return true;
+				}
+				return false;
+			});
 		}
+		// Done button: needed for multi-line (Enter does not submit there), and
+		// lets users without a keyboard Enter key (remote control, gamepad,
+		// mouse) submit as well.
+		Button doneButton = new Button(this);
+		container.addView(doneButton);
+		doneButton.setText(R.string.ime_dialog_done);
+		doneButton.setOnClickListener(view -> submit.run());
 		alertDialog.setOnCancelListener(dialog -> {
 			getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 			inputDialogState = DialogState.DIALOG_CANCELED;
